@@ -6,33 +6,41 @@ data_ui <- function(id){
       tabBox(
         width = 12,
         tabPanel("Plot",
+           fluidRow(
+             column(
+               width = 3,
+               box(
+                 width = 12,
+                 title = "Upload summary data",
+                 fileInput(ns("summaryFile"), "Upload Summary Data")
+               )
+             ),
+             column(
+               width=3,
+               box(
+                 width=12,
+                 selectInput(ns("xVar"), "X Axis variable", choices=c())
+               )
+             ),
+             column(
+               width=3,
+               box(
+                 width=12,
+                 selectInput(ns("yVar"), "Y Axis variable", choices=c())
+               )
+             )
+             
+           ),
+           fluidRow(
+             plotOutput(ns("dataPlot"))
+           )
+        ),
+        tabPanel("Data", 
                  fluidRow(
                    column(
-                     width = 3,
-                     box(
-                       width = 12,
-                       title = "Upload summary data",
-                       fileInput(ns("summaryFile"), "Upload Summary Data")
-                     )
-                   ),
-                   column(
-                     width=3,
-                     box(
-                       width=12,
-                       selectInput(ns("xVar"), "X Axis variable", choices=c())
-                     )
-                   ),
-                   column(
-                     width=3,
-                     box(
-                       width=12,
-                       selectInput(ns("yVar"), "Y Axis variable", choices=c())
-                     )
+                     width=12,
+                     div(style = 'overflow-x: scroll',DT::dataTableOutput(ns("dataDF"))) 
                    )
-                   
-                 ),
-                 fluidRow(
-                   plotOutput(ns("dataPlot"))
                  ))
       )
     )
@@ -63,7 +71,7 @@ data_server <- function(id){
         summary_data <<- read.csv(input$summaryFile$datapath) 
         updateSelectInput(session = session, "xVar", choices = colnames(summary_data))
         updateSelectInput(session = session, "yVar", choices = colnames(summary_data))
-        
+        output$dataDF <- DT::renderDataTable(DT::datatable(summary_data, options = list(paging = FALSE), editable = TRUE))
       })
       
       observeEvent(input$xVar, {
