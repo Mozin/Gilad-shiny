@@ -1,0 +1,13 @@
+name: shinyR
+title: shinyR
+username:
+account: mozin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5901602
+bundleId: 5710293
+url: https://mozin.shinyapps.io/shinyR/
+when: 1647892184.25887
+lastSyncTime: 1647892184.25888
+asMultiple: FALSE
+asStatic: FALSE
