@@ -56,11 +56,15 @@ get_summarised_data_for_plotting <- function(summary_data, x_var, y_var){
 
 plot_summarised_data <- function(summary_data, input, output){
   plot_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, input$yVar)
-  output$dataPlot <-  renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) + 
-                                   geom_line() + 
-                                   geom_point() +
-                                   xlab(input$xVar) +
-                                   ylab(input$yVar))
+  # output$dataPlot <-  renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) + 
+  #                                  geom_line() + 
+  #                                  geom_point() +
+  #                                  xlab(input$xVar) +
+  #                                  ylab(input$yVar))
+  output$dataPlot <- renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) +
+                                  geom_col() +
+                                  xlab(input$xVar) +
+                                  ylab(input$yVar))
 }
 
 
