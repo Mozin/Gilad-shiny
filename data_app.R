@@ -54,6 +54,12 @@ get_summarised_data_for_plotting <- function(summary_data, x_var, y_var){
 }
 
 
+plot_summarised_data <- function(summary_data, input, output){
+  summary_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, input$yVar)
+  output$dataPlot <-  renderPlot(ggplot(data = summary_data, aes(x = x_var, y = y_var)) + geom_line() + geom_point())
+}
+
+
 data_server <- function(id){
   moduleServer(
     id,
@@ -76,16 +82,20 @@ data_server <- function(id){
       
       observeEvent(input$xVar, {
         if(!is.null(summary_data)){
-          summary_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, input$yVar)
-          output$dataPlot <-  renderPlot(ggplot(data = summary_data, aes(x = x_var, y = y_var)) + geom_line() + geom_point())
+          plot_summarised_data(summary_data, input, output)
         }
       })
       
       observeEvent(input$yVar, {
         if(!is.null(summary_data)){
-          summary_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, input$yVar)
-          output$dataPlot <-  renderPlot(ggplot(data = summary_data, aes(x = x_var, y = y_var)) + geom_line() + geom_point())
+          plot_summarised_data(summary_data, input, output)
         }
+      })
+      
+      
+      observeEvent(input$dataDF_cell_edit, {
+        summary_data[input$dataDF_cell_edit$row,input$dataDF_cell_edit$col] <<- input$dataDF_cell_edit$value
+        plot_summarised_data(summary_data, input, output)
       })
       
     }
