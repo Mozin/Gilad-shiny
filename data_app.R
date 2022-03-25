@@ -55,8 +55,12 @@ get_summarised_data_for_plotting <- function(summary_data, x_var, y_var){
 
 
 plot_summarised_data <- function(summary_data, input, output){
-  summary_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, input$yVar)
-  output$dataPlot <-  renderPlot(ggplot(data = summary_data, aes(x = x_var, y = y_var)) + geom_line() + geom_point())
+  plot_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, input$yVar)
+  output$dataPlot <-  renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) + 
+                                   geom_line() + 
+                                   geom_point() +
+                                   xlab(input$xVar) +
+                                   ylab(input$yVar))
 }
 
 
@@ -94,7 +98,9 @@ data_server <- function(id){
       
       
       observeEvent(input$dataDF_cell_edit, {
-        summary_data[input$dataDF_cell_edit$row,input$dataDF_cell_edit$col] <<- input$dataDF_cell_edit$value
+        data_val <- input$dataDF_cell_edit$value
+        if(is.numeric(summary_data[[colnames(summary_data)[input$dataDF_cell_edit$col]]])) data_val <- as.numeric(data_val)
+        summary_data[input$dataDF_cell_edit$row,input$dataDF_cell_edit$col] <<- data_val
         plot_summarised_data(summary_data, input, output)
       })
       
