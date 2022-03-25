@@ -26,13 +26,17 @@ data_ui <- function(id){
                width=3,
                box(
                  width=12,
-                 selectInput(ns("yVar"), "Y Axis variable", choices=c())
+                 selectInput(ns("yVar"), 
+                             "Y Axis variable", 
+                             choices=c(),
+                             multiple = TRUE)
                )
              )
              
            ),
            fluidRow(
-             plotOutput(ns("dataPlot"))
+             uiOutput(ns("dataPlots"))
+             # plotOutput(ns("dataPlot"))
            )
         ),
         tabPanel("Data", 
@@ -55,16 +59,20 @@ get_summarised_data_for_plotting <- function(summary_data, x_var, y_var){
 
 
 plot_summarised_data <- function(summary_data, input, output){
-  plot_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, input$yVar)
-  # output$dataPlot <-  renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) + 
-  #                                  geom_line() + 
-  #                                  geom_point() +
-  #                                  xlab(input$xVar) +
-  #                                  ylab(input$yVar))
-  output$dataPlot <- renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) +
-                                  geom_col() +
-                                  xlab(input$xVar) +
-                                  ylab(input$yVar))
+  if(is.null(input$yVar)) return()
+  lapply(1:(length(input$yVar)), function(i){
+    yVar <- input$yVar[[i]]
+    plot_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, yVar)
+    # output$dataPlot <-  renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) + 
+    #                                  geom_line() + 
+    #                                  geom_point() +
+    #                                  xlab(input$xVar) +
+    #                                  ylab(input$yVar))
+    output[[paste0("plot", i)]] <- renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) +
+                                    geom_col() +
+                                    xlab(input$xVar) +
+                                    ylab(yVar))
+  })
 }
 
 
@@ -96,7 +104,15 @@ data_server <- function(id){
       
       observeEvent(input$yVar, {
         if(!is.null(summary_data)){
-          plot_summarised_data(summary_data, input, output)
+          if(length(input$yVar) > 0){
+            output$dataPlots <- renderUI({
+              lapply(1:length(input$yVar), function(i) {
+                plotname <- paste("plot", i, sep="")
+                plotOutput(ns(plotname))
+              })
+            })
+            plot_summarised_data(summary_data, input, output)
+          }
         }
       })
       
