@@ -49,7 +49,7 @@ data_ui <- function(id){
                  fluidRow(
                    column(
                      width=12,
-                     div(style = 'overflow-x: scroll',DT::dataTableOutput(ns("dataDF"))) 
+                     div(style = 'overflow-x: scroll', DT::dataTableOutput(ns("dataDF"))) 
                    )
                  ))
       )
@@ -70,6 +70,27 @@ get_summarised_data_for_plotting <- function(summary_data, x_var, y_var, plot_me
 }
 
 
+get_summary_statistics_plot_data <- function(plot_data, xVar, yVar){
+  summary_df <- data.frame("summary_stat" = c("min", "max", "median", "mean", "25 pc", "75 pc"),
+             "yVar" = c(min(plot_data$y_var),
+                      max(plot_data$y_var),
+                      median(plot_data$y_var),
+                      mean(plot_data$y_var),
+                      quantile(plot_data$y_var, 0.25),
+                      quantile(plot_data$y_var, 0.75)) %>% round(2)) %>% 
+    setNames(c("Metric", yVar))
+  if(plot_data$x_var %>% is.numeric()){
+    summary_df[[xVar]] = c(min(plot_data$x_var),
+                           max(plot_data$x_var),
+                           median(plot_data$x_var),
+                           mean(plot_data$x_var),
+                           quantile(plot_data$x_var, 0.25),
+                           quantile(plot_data$x_var, 0.75)) %>% round(2)
+  }
+  return(summary_df)
+}
+
+
 plot_summarised_data <- function(summary_data, input, output){
   if(is.null(input$yVar)) return()
   lapply(1:(length(input$yVar)), function(i){
@@ -80,6 +101,10 @@ plot_summarised_data <- function(summary_data, input, output){
     #                                  geom_point() +
     #                                  xlab(input$xVar) +
     #                                  ylab(input$yVar))
+    summary_stats_plot_data <- get_summary_statistics_plot_data(plot_data, input$xVar, yVar)
+    output[[paste0("table", i)]] <- DT::renderDataTable(DT::datatable(summary_stats_plot_data, 
+                                                                      options = list(paging = FALSE,
+                                                                                     searching = FALSE)))
     output[[paste0("plot", i)]] <- renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) +
                                     geom_col() +
                                     xlab(input$xVar) +
@@ -126,7 +151,17 @@ data_server <- function(id){
             output$dataPlots <- renderUI({
               lapply(1:length(input$yVar), function(i) {
                 plotname <- paste("plot", i, sep="")
-                plotOutput(ns(plotname))
+                tablename <- paste("table", i, sep="")
+                fluidRow(
+                  column(
+                    width = 8,
+                    plotOutput(ns(plotname))
+                  ),
+                  column(
+                    width = 4,
+                    DT::dataTableOutput(ns(tablename))
+                  )
+                )
               })
             })
             plot_summarised_data(summary_data, input, output)
