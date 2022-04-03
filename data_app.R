@@ -31,8 +31,14 @@ data_ui <- function(id){
                              choices=c(),
                              multiple = TRUE)
                )
+             ),
+             column(
+               width=3,
+               box(
+                 width=12,
+                 selectInput(ns("plotMetric"), "Metric to plot", choices=c("min", "max", "mean"))
+               )
              )
-             
            ),
            fluidRow(
              uiOutput(ns("dataPlots"))
@@ -52,9 +58,15 @@ data_ui <- function(id){
 }
 
 
-get_summarised_data_for_plotting <- function(summary_data, x_var, y_var){
+get_summarised_data_for_plotting <- function(summary_data, x_var, y_var, plot_metric){
   selected_df <- summary_data[,c(x_var, y_var)] %>% setNames(c("x_var", "y_var"))
-  selected_df %>% group_by(x_var) %>% summarise(y_var = mean(y_var, na.rm = T))
+  if(plot_metric == "mean"){
+    selected_df %>% group_by(x_var) %>% summarise(y_var = mean(y_var, na.rm = T)) %>% return()
+  }else if(plot_metric == "min"){
+    selected_df %>% group_by(x_var) %>% summarise(y_var = min(y_var, na.rm = T)) %>% return()
+  }else if(plot_metric == "max"){
+  selected_df %>% group_by(x_var) %>% summarise(y_var = max(y_var, na.rm = T)) %>% return()
+  }
 }
 
 
@@ -62,7 +74,7 @@ plot_summarised_data <- function(summary_data, input, output){
   if(is.null(input$yVar)) return()
   lapply(1:(length(input$yVar)), function(i){
     yVar <- input$yVar[[i]]
-    plot_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, yVar)
+    plot_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, yVar, input$plotMetric)
     # output$dataPlot <-  renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) + 
     #                                  geom_line() + 
     #                                  geom_point() +
@@ -97,6 +109,12 @@ data_server <- function(id){
       })
       
       observeEvent(input$xVar, {
+        if(!is.null(summary_data)){
+          plot_summarised_data(summary_data, input, output)
+        }
+      })
+
+      observeEvent(input$plotMetric, {
         if(!is.null(summary_data)){
           plot_summarised_data(summary_data, input, output)
         }
