@@ -41,6 +41,22 @@ data_ui <- function(id){
              )
            ),
            fluidRow(
+             column(
+               width=3,
+               box(
+                 width=12,
+                 selectInput(ns("facetVar"), "facet variable", choices=c())
+               )
+             ),
+             column(
+               width=3,
+               box(
+                 width=12,
+                 selectInput(ns("plotSmooth"), "Plot smooth var", choices=c("None", "Poly x", "Poly x2"))
+               )
+             ),
+           ),
+           fluidRow(
              uiOutput(ns("dataPlots"))
              # plotOutput(ns("dataPlot"))
            )
@@ -72,12 +88,12 @@ get_summarised_data_for_plotting <- function(summary_data, x_var, y_var, plot_me
 
 get_summary_statistics_plot_data <- function(plot_data, xVar, yVar){
   summary_df <- data.frame("summary_stat" = c("min", "max", "median", "mean", "25 pc", "75 pc"),
-             "yVar" = c(min(plot_data$y_var),
-                      max(plot_data$y_var),
-                      median(plot_data$y_var),
-                      mean(plot_data$y_var),
-                      quantile(plot_data$y_var, 0.25),
-                      quantile(plot_data$y_var, 0.75)) %>% round(2)) %>% 
+             "yVar" = c(min(plot_data$y_var, na.rm = T),
+                      max(plot_data$y_var, na.rm = T),
+                      median(plot_data$y_var, na.rm = T),
+                      mean(plot_data$y_var, na.rm = T),
+                      quantile(plot_data$y_var, 0.25, na.rm = T),
+                      quantile(plot_data$y_var, 0.75, na.rm = T)) %>% round(2)) %>% 
     setNames(c("Metric", yVar))
   if(plot_data$x_var %>% is.numeric()){
     summary_df[[xVar]] = c(min(plot_data$x_var),
@@ -96,19 +112,21 @@ plot_summarised_data <- function(summary_data, input, output){
   lapply(1:(length(input$yVar)), function(i){
     yVar <- input$yVar[[i]]
     plot_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, yVar, input$plotMetric)
-    # output$dataPlot <-  renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) + 
-    #                                  geom_line() + 
-    #                                  geom_point() +
-    #                                  xlab(input$xVar) +
-    #                                  ylab(input$yVar))
     summary_stats_plot_data <- get_summary_statistics_plot_data(plot_data, input$xVar, yVar)
     output[[paste0("table", i)]] <- DT::renderDataTable(DT::datatable(summary_stats_plot_data, 
                                                                       options = list(paging = FALSE,
                                                                                      searching = FALSE)))
-    output[[paste0("plot", i)]] <- renderPlot(ggplot(data = plot_data, aes(x = x_var, y = y_var)) +
-                                    geom_col() +
-                                    xlab(input$xVar) +
-                                    ylab(yVar))
+    
+    plot_obj <- ggplot(data = plot_data, aes(x = x_var, y = y_var)) +
+      geom_col() +
+      xlab(input$xVar) +
+      ylab(yVar)
+    if(input$plotSmooth %>% is.null() || input$plotSmooth == "None"){
+      output[[paste0("plot", i)]] <- renderPlot(plot_obj)
+    }else{
+      if(input$plotSmooth == "Poly x2") output[[paste0("plot", i)]] <- renderPlot(plot_obj + geom_smooth(formula = y ~ poly(x, 2)))
+      if(input$plotSmooth == "Poly x") output[[paste0("plot", i)]] <- renderPlot(plot_obj + geom_smooth(formula = y ~ x))
+    }
   })
 }
 
@@ -130,6 +148,7 @@ data_server <- function(id){
         summary_data <<- read.csv(input$summaryFile$datapath) 
         updateSelectInput(session = session, "xVar", choices = colnames(summary_data))
         updateSelectInput(session = session, "yVar", choices = colnames(summary_data))
+        updateSelectInput(session = session, "facetVar", choices = colnames(summary_data))
         output$dataDF <- DT::renderDataTable(DT::datatable(summary_data, options = list(paging = FALSE), editable = TRUE))
       })
       
@@ -140,6 +159,12 @@ data_server <- function(id){
       })
 
       observeEvent(input$plotMetric, {
+        if(!is.null(summary_data)){
+          plot_summarised_data(summary_data, input, output)
+        }
+      })
+
+      observeEvent(input$plotSmooth, {
         if(!is.null(summary_data)){
           plot_summarised_data(summary_data, input, output)
         }
