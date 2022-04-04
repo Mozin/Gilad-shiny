@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 library(dplyr)
 library(ggplot2)
+library(Kendall)
 
 source("data_app.R")
 

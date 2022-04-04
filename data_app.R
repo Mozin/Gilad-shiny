@@ -87,21 +87,27 @@ get_summarised_data_for_plotting <- function(summary_data, x_var, y_var, plot_me
 
 
 get_summary_statistics_plot_data <- function(plot_data, xVar, yVar){
-  summary_df <- data.frame("summary_stat" = c("min", "max", "median", "mean", "25 pc", "75 pc"),
+  y_kendall <- MannKendall(plot_data$y_var)
+  summary_df <- data.frame("summary_stat" = c("min", "max", "median", "mean", "25 pc", "75 pc", "Kendall stat", "Kendall p val"),
              "yVar" = c(min(plot_data$y_var, na.rm = T),
                       max(plot_data$y_var, na.rm = T),
                       median(plot_data$y_var, na.rm = T),
                       mean(plot_data$y_var, na.rm = T),
                       quantile(plot_data$y_var, 0.25, na.rm = T),
-                      quantile(plot_data$y_var, 0.75, na.rm = T)) %>% round(2)) %>% 
+                      quantile(plot_data$y_var, 0.75, na.rm = T),
+                      y_kendall$tau,
+                      y_kendall$sl) %>% round(2)) %>% 
     setNames(c("Metric", yVar))
   if(plot_data$x_var %>% is.numeric()){
+    x_kendall <- MannKendall(plot_data$x_var)
     summary_df[[xVar]] = c(min(plot_data$x_var),
                            max(plot_data$x_var),
                            median(plot_data$x_var),
                            mean(plot_data$x_var),
                            quantile(plot_data$x_var, 0.25),
-                           quantile(plot_data$x_var, 0.75)) %>% round(2)
+                           quantile(plot_data$x_var, 0.75),
+                           x_kendall$tau,
+                           x_kendall$sl) %>% round(2)
   }
   return(summary_df)
 }
@@ -112,7 +118,8 @@ plot_summarised_data <- function(summary_data, input, output){
   lapply(1:(length(input$yVar)), function(i){
     yVar <- input$yVar[[i]]
     plot_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, yVar, input$plotMetric)
-    summary_stats_plot_data <- get_summary_statistics_plot_data(plot_data, input$xVar, yVar)
+    selected_df <- summary_data[,c(input$xVar, yVar)] %>% setNames(c("x_var", "y_var"))
+    summary_stats_plot_data <- get_summary_statistics_plot_data(selected_df, input$xVar, yVar)
     output[[paste0("table", i)]] <- DT::renderDataTable(DT::datatable(summary_stats_plot_data, 
                                                                       options = list(paging = FALSE,
                                                                                      searching = FALSE)))
