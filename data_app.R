@@ -52,7 +52,7 @@ data_ui <- function(id){
                width=3,
                box(
                  width=12,
-                 selectInput(ns("plotSmooth"), "Plot smooth var", choices=c("None", "Poly x", "Poly x2"))
+                 selectInput(ns("plotSmooth"), "Plot smooth var", choices=c("None", "Linear", "Poly x2"))
                )
              ),
            ),
@@ -98,18 +98,18 @@ get_summary_statistics_plot_data <- function(plot_data, xVar, yVar){
                       y_kendall$tau,
                       y_kendall$sl) %>% round(2)) %>% 
     setNames(c("Metric", yVar))
-  if(plot_data$x_var %>% is.numeric()){
-    x_kendall <- MannKendall(plot_data$x_var)
-    summary_df[[xVar]] = c(min(plot_data$x_var),
-                           max(plot_data$x_var),
-                           median(plot_data$x_var),
-                           mean(plot_data$x_var),
-                           quantile(plot_data$x_var, 0.25),
-                           quantile(plot_data$x_var, 0.75),
-                           x_kendall$tau,
-                           x_kendall$sl) %>% round(2)
-  }
   return(summary_df)
+}
+
+
+append_facet_var_data_for_plot_data <- function(plot_data, summary_data, facet_var, x_var){
+  facet_wrap_data <- summary_data[,c(x_var, facet_var)] %>% setNames(c("x_var", "facet_var"))
+  facet_wrap_data <- facet_wrap_data %>% 
+    count(x_var, facet_var) %>% 
+    arrange(desc(n)) %>% 
+    group_by(x_var) %>% 
+    summarise(facet_var = facet_var[1])
+  merge(plot_data, facet_wrap_data, by = "x_var")
 }
 
 
@@ -123,17 +123,25 @@ plot_summarised_data <- function(summary_data, input, output){
     output[[paste0("table", i)]] <- DT::renderDataTable(DT::datatable(summary_stats_plot_data, 
                                                                       options = list(paging = FALSE,
                                                                                      searching = FALSE)))
+    if(!(input$facetVar %>% is.null() || input$facetVar == "None")){
+      plot_data <- append_facet_var_data_for_plot_data(plot_data, summary_data, input$facetVar, input$xVar)
+    }
     
     plot_obj <- ggplot(data = plot_data, aes(x = x_var, y = y_var)) +
       geom_col() +
       xlab(input$xVar) +
       ylab(yVar)
     if(input$plotSmooth %>% is.null() || input$plotSmooth == "None"){
-      output[[paste0("plot", i)]] <- renderPlot(plot_obj)
+      plot_obj <- plot_obj
     }else{
-      if(input$plotSmooth == "Poly x2") output[[paste0("plot", i)]] <- renderPlot(plot_obj + geom_smooth(formula = y ~ poly(x, 2)))
-      if(input$plotSmooth == "Poly x") output[[paste0("plot", i)]] <- renderPlot(plot_obj + geom_smooth(formula = y ~ x))
+      if(input$plotSmooth == "Poly x2") plot_obj <- plot_obj + geom_smooth(method = "glm", formula = y ~ poly(x, 2))
+      if(input$plotSmooth == "Linear") plot_obj <- plot_obj + geom_smooth(method = "glm", formula = y ~ x)
     }
+
+    if(!(input$facetVar %>% is.null() || input$facetVar == "None")){    
+      plot_obj <- plot_obj + facet_wrap(~facet_var)
+    }
+    output[[paste0("plot", i)]] <- renderPlot(plot_obj)
   })
 }
 
@@ -155,8 +163,11 @@ data_server <- function(id){
         summary_data <<- read.csv(input$summaryFile$datapath) 
         updateSelectInput(session = session, "xVar", choices = colnames(summary_data))
         updateSelectInput(session = session, "yVar", choices = colnames(summary_data))
-        updateSelectInput(session = session, "facetVar", choices = colnames(summary_data))
-        output$dataDF <- DT::renderDataTable(DT::datatable(summary_data, options = list(paging = FALSE), editable = TRUE))
+        updateSelectInput(session = session, "facetVar", choices = c("None", colnames(summary_data)))
+        output$dataDF <- DT::renderDataTable(DT::datatable(summary_data, 
+                                                           options = list(paging = FALSE,
+                                                                          scrollX = TRUE), 
+                                                           editable = TRUE))
       })
       
       observeEvent(input$xVar, {
@@ -172,6 +183,12 @@ data_server <- function(id){
       })
 
       observeEvent(input$plotSmooth, {
+        if(!is.null(summary_data)){
+          plot_summarised_data(summary_data, input, output)
+        }
+      })
+
+      observeEvent(input$facetVar, {
         if(!is.null(summary_data)){
           plot_summarised_data(summary_data, input, output)
         }
