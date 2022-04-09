@@ -102,14 +102,16 @@ get_summary_statistics_plot_data <- function(plot_data, xVar, yVar){
 }
 
 
-append_facet_var_data_for_plot_data <- function(plot_data, summary_data, facet_var, x_var){
-  facet_wrap_data <- summary_data[,c(x_var, facet_var)] %>% setNames(c("x_var", "facet_var"))
-  facet_wrap_data <- facet_wrap_data %>% 
-    count(x_var, facet_var) %>% 
-    arrange(desc(n)) %>% 
-    group_by(x_var) %>% 
-    summarise(facet_var = facet_var[1])
-  merge(plot_data, facet_wrap_data, by = "x_var")
+summarise_facet_var_data_for_plot_data <- function(summary_data, facet_var, x_var, y_var, plot_metric){
+  facet_wrap_data <- summary_data[,c(x_var, facet_var, y_var)] %>% setNames(c("x_var", "facet_var", "y_var"))
+  if(plot_metric == "mean"){
+    facet_wrap_data %>% group_by(x_var, facet_var) %>% summarise(y_var = mean(y_var, na.rm = T)) %>% return()
+  }else if(plot_metric == "min"){
+    facet_wrap_data %>% group_by(x_var, facet_var) %>% summarise(y_var = min(y_var, na.rm = T)) %>% return()
+  }else if(plot_metric == "max"){
+    facet_wrap_data %>% group_by(x_var, facet_var) %>% summarise(y_var = max(y_var, na.rm = T)) %>% return()
+  }
+  return(facet_wrap_data)
 }
 
 
@@ -124,7 +126,7 @@ plot_summarised_data <- function(summary_data, input, output){
                                                                       options = list(paging = FALSE,
                                                                                      searching = FALSE)))
     if(!(input$facetVar %>% is.null() || input$facetVar == "None")){
-      plot_data <- append_facet_var_data_for_plot_data(plot_data, summary_data, input$facetVar, input$xVar)
+      plot_data <- summarise_facet_var_data_for_plot_data(summary_data, input$facetVar, input$xVar, yVar, input$plotMetric)
     }
     
     plot_obj <- ggplot(data = plot_data, aes(x = x_var, y = y_var)) +
