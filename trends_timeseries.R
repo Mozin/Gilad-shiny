@@ -1,7 +1,7 @@
 trends_timeseries_ui <- function(id){
   ns <- NS(id)
   
-  fluidRow(
+  fluidPage(
     fluidRow(
       column(
         width=3,
@@ -65,7 +65,6 @@ get_summarised_data_for_plotting <- function(summary_data, x_var, y_var, plot_me
 
 
 get_summary_statistics_plot_data <- function(plot_data, xVar, yVar){
-  browser()
   y_kendall <- MannKendall(plot_data$y_var)
   summary_df <- data.frame("summary_stat" = c("min", "max", "median", "mean", "25 pc", "75 pc", "Kendall stat", "Kendall p val"),
                            "yVar" = c(min(plot_data$y_var, na.rm = T),
