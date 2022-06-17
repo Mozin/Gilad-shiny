@@ -8,7 +8,9 @@ data_ui <- function(id){
                      box(
                        width = 12,
                        title = "Upload summary data",
-                       fileInput(ns("summaryFile"), "Upload Summary Data")
+                       fileInput(ns("summaryFile"), "Upload Summary Data"),
+                       textInput(ns("ramasarId"), "Ramasar id"),
+                       actionButton(ns("link"), "Link")
                      )
                    ),
                    column(
@@ -20,7 +22,7 @@ data_ui <- function(id){
 }
 
 
-data_server <- function(id, DATAOBJS){
+data_server <- function(id, DATAOBJS, db_con){
   moduleServer(
     id,
     function(input, output, session){
@@ -45,6 +47,36 @@ data_server <- function(id, DATAOBJS){
         data_val <- input$dataDF_cell_edit$value
         if(is.numeric(DATAOBJS$summary_data[[colnames(DATAOBJS$summary_data)[input$dataDF_cell_edit$col]]])) data_val <- as.numeric(data_val)
         DATAOBJS$summary_data[input$dataDF_cell_edit$row,input$dataDF_cell_edit$col] <<- data_val
+      })
+      
+      
+      observeEvent(input$link, {
+        if(input$ramasarId != ""){
+          ramasar_db_df <- DBI::dbGetQuery(db_con, paste0('select * from "v_ramsar_summary" where ramsarid=', "'", input$ramasarId,"'"))
+          hybas_db_df <- DBI::dbGetQuery(db_con, paste0("select * from v_hybas_lvl5_summary where ramsarid='", input$ramasarId,"'"))
+          wdpa_db_df <- DBI::dbGetQuery(db_con, paste0("select * from v_wdpa_summary where ramsarid='", input$ramasarId,"'"))
+          
+          df_list <- list(ramasar_db_df, wdpa_db_df)  
+          WDPA.Ramsar.DBDat.Filter <- df_list %>% purrr::reduce(inner_join,  by=c("ramsarid", "Year"))
+          
+          WDPA.Ramsar.DBDat.Filter.Summary <-  WDPA.Ramsar.DBDat.Filter %>%
+            dplyr::group_by(Year,ramsarid) %>%
+            summarise(Maximum.Water.Area.km2 = max(`Maximum Water Area(km2).x`,`Maximum Water Area(km2).y`),
+                      Average.Water.Area.km2 = max(`Average Water Area(km2).x`,`Average Water Area(km2).y`),
+                      Moisture.Index = max(`Moisture Index.x`, `Moisture Index.y`),
+                      Vegetation.Index = max(`Vegetation Index.x`, `Vegetation Index.y`),
+                      Annual.Precipitation = max(`Annual Precipitation.x`, `Annual Precipitation.y`))
+          
+          ## merge Hybas and wetland data ####
+          
+          colnames(hybas_db_df) <- c("ramsarid","Ramsar.Name","Year","Annual.Precipitation.Hybas5","Palmer.Drought.Hybas5","Runoff.Hybas5")
+          df_list <- list(DATAOBJS$summary_data %>% mutate(ramsarid=as.numeric(input$ramasarId), Year=WaterYear), WDPA.Ramsar.DBDat.Filter.Summary, hybas_db_df)      
+          merged_df <- df_list %>% purrr::reduce(inner_join,  by=c("ramsarid", "Year"))
+          output$dataDF <- DT::renderDataTable(DT::datatable(merged_df, 
+                                                             options = list(paging = FALSE,
+                                                                            scrollX = TRUE), 
+                                                             editable = TRUE))
+        }
       })
       
     }

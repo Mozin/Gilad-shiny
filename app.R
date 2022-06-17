@@ -53,7 +53,13 @@ server <- function(input, output){
     )
   })
   
-  data_server("data", DATAOBJS)
+  autoInvalidate <- reactiveTimer(10000)
+  observe({
+    autoInvalidate()
+    cat(".")
+  })
+  
+  data_server("data", DATAOBJS, db_con)
   trends_timeseries_server("trendsTimeseries", DATAOBJS)
   scatter_plots_server("scatterPlots", DATAOBJS)
 }
