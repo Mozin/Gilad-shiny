@@ -14,6 +14,22 @@ ui <- dashboardPage(
   dashboardHeader(),
   dashboardSidebar(uiOutput("sidebarpanel")),
   dashboardBody(
+    tags$head(tags$style(HTML(
+      '.myClass { 
+        font-size: 20px;
+        line-height: 50px;
+        text-align: left;
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+        padding: 0 15px;
+        overflow: hidden;
+        color: white;
+      }
+    '))),
+    tags$script(HTML('
+      $(document).ready(function() {
+        $("header").find("nav").append(\'<span class="myClass"> Ramsar Monitoring and Assessment Tool </span>\');
+      })
+     ')),
     tags$head(tags$style(HTML('
                               .skin-blue .main-header .navbar {
                                 background-color: #27A8AB;
