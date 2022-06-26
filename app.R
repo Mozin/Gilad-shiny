@@ -14,6 +14,27 @@ ui <- dashboardPage(
   dashboardHeader(),
   dashboardSidebar(uiOutput("sidebarpanel")),
   dashboardBody(
+    tags$head(tags$style(HTML('
+                              .skin-blue .main-header .navbar {
+                                background-color: #27A8AB;
+                              }      
+                              /* logo */
+                              .skin-blue .main-header .logo {
+                                background-color: #27A8AB;
+                              }
+                              .skin-blue .main-sidebar {
+                                background-color: #37CDD1;
+                              }
+                              .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+                                background-color: #27A8AB;
+                                color: #000000;
+                              }
+                              /* other links in the sidebarmenu */
+                              .skin-blue .main-sidebar .sidebar .sidebar-menu a{
+                                background-color: #37CDD1;
+                                color: #ffffff;
+                              }                              
+                        '))),
     shinyjs::useShinyjs(),
     uiOutput("body")
   )
