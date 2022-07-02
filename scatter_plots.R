@@ -123,9 +123,11 @@ scatter_plots_server <- function(id, DATAOBJS){
       
       
       observe({
-        updateSelectInput(session = session, "xVar", choices = colnames(DATAOBJS$summary_data))
-        updateSelectInput(session = session, "yVar", choices = colnames(DATAOBJS$summary_data))
-        updateSelectInput(session = session, "facetVar", choices = c("None", colnames(DATAOBJS$summary_data)))
+        if(!is.null(DATAOBJS$summary_data) & is.data.frame(DATAOBJS$summary_data)){
+          updateSelectInput(session = session, "xVar", choices = colnames(DATAOBJS$summary_data))
+          updateSelectInput(session = session, "yVar", choices = colnames(select_if(DATAOBJS$summary_data, is.numeric)))
+          updateSelectInput(session = session, "facetVar", choices = c("None", colnames(DATAOBJS$summary_data)))
+        }
       })
       
       

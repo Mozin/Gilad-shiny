@@ -16,8 +16,7 @@ trends_timeseries_ui <- function(id){
           width=12,
           selectInput(ns("yVar"), 
                       "Y Axis variable", 
-                      choices=c(),
-                      multiple = TRUE)
+                      choices=c())
         )
       ),
       column(
@@ -65,7 +64,7 @@ get_summarised_data_for_plotting <- function(summary_data, x_var, y_var, plot_me
 
 
 get_summary_statistics_plot_data <- function(plot_data, xVar, yVar){
-  y_kendall <- MannKendall(plot_data$y_var)
+  if(is.numeric(plot_data$y_var)) y_kendall <- MannKendall(plot_data$y_var) else y_kendall <- list(tau = NA, sl = NA)
   summary_df <- data.frame("summary_stat" = c("min", "max", "median", "mean", "25 pc", "75 pc", "Kendall stat", "Kendall p val"),
                            "yVar" = c(min(plot_data$y_var, na.rm = T),
                                       max(plot_data$y_var, na.rm = T),
@@ -94,13 +93,12 @@ summarise_facet_var_data_for_plot_data <- function(summary_data, facet_var, x_va
 
 
 plot_summarised_data <- function(summary_data, input, output){
-  if(is.null(input$yVar)) return()
-  lapply(1:(length(input$yVar)), function(i){
-    yVar <- input$yVar[[i]]
+  if(is.null(input$yVar) || input$yVar == "") return()
+    yVar <- input$yVar
     plot_data <- summary_data %>% get_summarised_data_for_plotting(input$xVar, yVar, input$plotMetric)
     selected_df <- summary_data[,c(input$xVar, yVar)] %>% setNames(c("x_var", "y_var"))
     summary_stats_plot_data <- get_summary_statistics_plot_data(selected_df, input$xVar, yVar)
-    output[[paste0("table", i)]] <- DT::renderDataTable(DT::datatable(summary_stats_plot_data, 
+    output[["table1"]] <- DT::renderDataTable(DT::datatable(summary_stats_plot_data, 
                                                                       options = list(paging = FALSE,
                                                                                      searching = FALSE)))
     if(!(input$facetVar %>% is.null() || input$facetVar == "None")){
@@ -121,8 +119,7 @@ plot_summarised_data <- function(summary_data, input, output){
     if(!(input$facetVar %>% is.null() || input$facetVar == "None")){    
       plot_obj <- plot_obj + facet_wrap(~facet_var)
     }
-    output[[paste0("plot", i)]] <- renderPlot(plot_obj)
-  })
+    output[[paste0("plot1")]] <- renderPlot(plot_obj)
 }
 
 
@@ -164,9 +161,11 @@ trends_timeseries_server <- function(id, DATAOBJS){
       
       
       observe({
-        updateSelectInput(session = session, "xVar", choices = colnames(DATAOBJS$summary_data))
-        updateSelectInput(session = session, "yVar", choices = colnames(DATAOBJS$summary_data))
-        updateSelectInput(session = session, "facetVar", choices = c("None", colnames(DATAOBJS$summary_data)))
+        if(!is.null(DATAOBJS$summary_data) & is.data.frame(DATAOBJS$summary_data)){
+          updateSelectInput(session = session, "xVar", choices = colnames(DATAOBJS$summary_data))
+          updateSelectInput(session = session, "yVar", choices = colnames(select_if(DATAOBJS$summary_data, is.numeric)))
+          updateSelectInput(session = session, "facetVar", choices = c("None", colnames(DATAOBJS$summary_data)))
+        }
       })
       
       

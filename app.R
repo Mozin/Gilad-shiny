@@ -85,8 +85,9 @@ server <- function(input, output){
     sidebarMenu(
       menuItem("Introduction", tabName = "Introduction"),
       menuItem("Data", tabName = "Data"),
-      menuItem("Time Series Trends", tabName = "TimeSeriesTrends"),
-      menuItem("Cause and Effect", tabName = "causeEffect")
+      menuItem("Exploration", tabName = "TimeSeriesTrends"),
+      menuItem("Assessment", tabName = "causeEffect"),
+      menuItem("Reporting")
     )
   })
   
