@@ -8,6 +8,7 @@ library(Kendall)
 source("data_app.R")
 source("trends_timeseries.R")
 source("scatter_plots.R")
+source("assesment_app.R")
 
 
 ui <- dashboardPage(
@@ -77,6 +78,10 @@ server <- function(input, output){
       tabItem(
         tabName = "causeEffect",
         scatter_plots_ui("scatterPlots")
+      ),
+      tabItem(
+        tabName = "assesment",
+        assessment_app_ui("assesment")
       )
     )
   })
@@ -86,7 +91,8 @@ server <- function(input, output){
       menuItem("Introduction", tabName = "Introduction"),
       menuItem("Data", tabName = "Data"),
       menuItem("Exploration", tabName = "TimeSeriesTrends"),
-      menuItem("Assessment", tabName = "causeEffect"),
+      menuItem("Cause and Effect", tabName = "causeEffect"),
+      menuItem("Assesment", tabName = "assesment"),
       menuItem("Reporting")
     )
   })
@@ -100,6 +106,7 @@ server <- function(input, output){
   data_server("data", DATAOBJS, db_con)
   trends_timeseries_server("trendsTimeseries", DATAOBJS)
   scatter_plots_server("scatterPlots", DATAOBJS)
+  assesment_app_server("assesement", DATAOBJS)
 }
 
 
