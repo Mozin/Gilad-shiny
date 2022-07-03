@@ -106,7 +106,7 @@ server <- function(input, output){
   data_server("data", DATAOBJS, db_con)
   trends_timeseries_server("trendsTimeseries", DATAOBJS)
   scatter_plots_server("scatterPlots", DATAOBJS)
-  assesment_app_server("assesement", DATAOBJS)
+  assesment_app_server("assesment", DATAOBJS)
 }
 
 
