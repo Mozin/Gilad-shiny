@@ -9,10 +9,11 @@ source("data_app.R")
 source("trends_timeseries.R")
 source("scatter_plots.R")
 source("assesment_app.R")
+source("reporting_app.R")
 
 
 ui <- dashboardPage(
-  dashboardHeader(),
+  dashboardHeader(title = tags$img(src = "logo.png", height = "100%")),
   dashboardSidebar(uiOutput("sidebarpanel")),
   dashboardBody(
     tags$head(tags$style(HTML(
@@ -82,6 +83,10 @@ server <- function(input, output){
       tabItem(
         tabName = "assesment",
         assessment_app_ui("assesment")
+      ),
+      tabItem(
+        tabName = "reporting",
+        assessment_app_ui("reporting")
       )
     )
   })
