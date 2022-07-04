@@ -76,6 +76,10 @@ assesment_app_server <- function(id, DATAOBJS, REPORTINGVARS){
       observeEvent(input$ecosystemThreatVar, {
         REPORTINGVARS$ecosystem_threat_var <<- input$ecosystemThreatVar
       })
+      
+      observeEvent(input$yearVar, {
+        REPORTINGVARS$year_var <<- input$yearVar
+      })
     }
   )
   
