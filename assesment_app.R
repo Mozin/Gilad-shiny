@@ -80,6 +80,10 @@ assesment_app_server <- function(id, DATAOBJS, REPORTINGVARS){
       observeEvent(input$yearVar, {
         REPORTINGVARS$year_var <<- input$yearVar
       })
+      
+      observeEvent(input$summaryFunction, {
+        REPORTINGVARS$summary_func <<- input$summaryFunction
+      })
     }
   )
   

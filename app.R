@@ -61,7 +61,8 @@ ui <- dashboardPage(
 
 server <- function(input, output){
   DATAOBJS <- reactiveValues(summary_data = "")
-  REPORTINGVARS <- reactiveValues(ambient_var = "", resources_var = "", ecosystem_val_var = "", ecosystem_threat_var = "")
+  REPORTINGVARS <- reactiveValues(ambient_var = "", resources_var = "", ecosystem_val_var = "", 
+                                  ecosystem_threat_var = "", year_var = "", summary_func="")
   db_con <- dbConnect(RPostgres::Postgres(), dbname = "postgres", host="platypus-wetlands-db.ckzvcjercc61.ap-southeast-2.rds.amazonaws.com", port=5432, user="mohsin", password="RC345aLaxxuAJ")
   
   output$body <- renderUI({

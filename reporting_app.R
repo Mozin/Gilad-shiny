@@ -12,16 +12,23 @@ reporting_app_ui <- function(id){
 }
 
 
-generate_report_table_row <- function(data_df, row_input_data, year_col){
+generate_report_table_row <- function(data_df, row_input_data, year_col, summary_func){
   if(row_input_data$indicator == "") return(data.frame())
   data_vec <- data_df[[row_input_data$indicator]]
   mean_data <- mean(data_vec, na.rm = T)
   sd_data <- sd(data_vec, na.rm = T)
   percentiles = quantile(data_vec, probs = c(0.1, 0.25, 0.5, 0.75, 0.9)) %>% paste0(collapse = ", ")
   current_year <- max(data_df[[year_col]])
+  summarised_df <- plyr::ddply(data_df, year_col, function(df){
+    year_data_vec <- df[[row_input_data$indicator]]
+    do.call(summary_func, list(year_data_vec, na.rm = T))
+  })
+  summarised_df$rank <- rank(summarised_df$V1)
+  current_rank <- summarised_df$rank[summarised_df[[year_col]] == current_year]
   row_input_data$mean <- mean_data
   row_input_data$sd <- sd_data
   row_input_data$percentiles <- percentiles
+  row_input_data$current_rank <- current_rank
   row_input_data
 }
 
@@ -42,12 +49,12 @@ reporting_app_server <- function(id, DATAOBJS, REPORTINGVARS){
           indicators_df <- dplyr::bind_rows(ambient_df, resources_df, ecosystem_value_df, ecosystem_threat_df)
           output$reportTable <- DT::renderDataTable({
             indicators_df %>% plyr::ddply(c("ecosystem_element", "indicator"), function(df){
-              generate_report_table_row(DATAOBJS$summary_data, df, REPORTINGVARS$year_var)
+              generate_report_table_row(DATAOBJS$summary_data, df, REPORTINGVARS$year_var, REPORTINGVARS$summary_func)
             }) %>% 
               DT::datatable(extensions = 'Buttons', 
                             options = list(paging = FALSE, 
                                            buttons = list(
-                                             list(extend = 'excel', title = "Data")
+                                             list(extend = 'csv', title = "Data")
                                            ),
                                            dom = 'Bfrtip'))
           })
