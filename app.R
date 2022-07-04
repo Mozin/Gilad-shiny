@@ -61,6 +61,7 @@ ui <- dashboardPage(
 
 server <- function(input, output){
   DATAOBJS <- reactiveValues(summary_data = "")
+  REPORTINGVARS <- reactiveValues(ambient_var = "", resources_var = "", ecosystem_val_var = "", ecosystem_threat_var = "")
   db_con <- dbConnect(RPostgres::Postgres(), dbname = "postgres", host="platypus-wetlands-db.ckzvcjercc61.ap-southeast-2.rds.amazonaws.com", port=5432, user="mohsin", password="RC345aLaxxuAJ")
   
   output$body <- renderUI({
@@ -86,7 +87,7 @@ server <- function(input, output){
       ),
       tabItem(
         tabName = "reporting",
-        assessment_app_ui("reporting")
+        reporting_app_ui("reporting")
       )
     )
   })
@@ -98,7 +99,7 @@ server <- function(input, output){
       menuItem("Exploration", tabName = "TimeSeriesTrends"),
       menuItem("Cause and Effect", tabName = "causeEffect"),
       menuItem("Assesment", tabName = "assesment"),
-      menuItem("Reporting")
+      menuItem("Reporting", tabName = "reporting")
     )
   })
   
@@ -111,7 +112,8 @@ server <- function(input, output){
   data_server("data", DATAOBJS, db_con)
   trends_timeseries_server("trendsTimeseries", DATAOBJS)
   scatter_plots_server("scatterPlots", DATAOBJS)
-  assesment_app_server("assesment", DATAOBJS)
+  assesment_app_server("assesment", DATAOBJS, REPORTINGVARS)
+  reporting_app_server("reporting", DATAOBJS, REPORTINGVARS)
 }
 
 

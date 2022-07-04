@@ -17,25 +17,25 @@ assessment_app_ui <- function(id){
         box(
           width = 3,
           tags$h4("Ambient envirnment"),
-          selectInput(ns("ambientVar"), "Select Indicator", choices=c()),
+          selectInput(ns("ambientVar"), "Select Indicator", choices=c(), multiple = T),
           background="yellow"
         ),
         box(
           width = 3,
           tags$h4("Resources"),
-          selectInput(ns("resourcesVar"), "Select Indicator", choices=c()),
+          selectInput(ns("resourcesVar"), "Select Indicator", choices=c(), multiple = T),
           background="blue"
         ),
         box(
           width = 3,
           tags$h4("Ecosystem Value"),
-          selectInput(ns("ecosystemValVar"), "Select Indicator", choices=c()),
+          selectInput(ns("ecosystemValVar"), "Select Indicator", choices=c(), multiple = T),
           background="green"
         ),
         box(
           width = 3,
           tags$h4("Ecosystem Threats"),
-          selectInput(ns("ecosystemThreatVar"), "Select Indicator", choices=c()),
+          selectInput(ns("ecosystemThreatVar"), "Select Indicator", choices=c(), multiple = T),
           background="orange"
         )
       )
@@ -44,7 +44,7 @@ assessment_app_ui <- function(id){
 }
 
 
-assesment_app_server <- function(id, DATAOBJS){
+assesment_app_server <- function(id, DATAOBJS, REPORTINGVARS){
   moduleServer(
     id,
     function(input, output, session){
@@ -60,6 +60,22 @@ assesment_app_server <- function(id, DATAOBJS){
         }
       })
       
+      
+      observeEvent(input$ambientVar, {
+        REPORTINGVARS$ambient_var <<- input$ambientVar
+      })
+
+      observeEvent(input$resourcesVar, {
+        REPORTINGVARS$resources_var <<- input$resourcesVar
+      })
+      
+      observeEvent(input$ecosystemValVar, {
+        REPORTINGVARS$ecosystem_val_var <<- input$ecosystemValVar
+      })
+      
+      observeEvent(input$ecosystemThreatVar, {
+        REPORTINGVARS$ecosystem_threat_var <<- input$ecosystemThreatVar
+      })
     }
   )
   
