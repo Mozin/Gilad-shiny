@@ -5,9 +5,9 @@ account: mozin
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5901602
-bundleId: 5710293
+bundleId: 6081132
 url: https://mozin.shinyapps.io/shinyR/
-when: 1647892184.25887
-lastSyncTime: 1647892184.25888
+when: 1657271177.94177
+lastSyncTime: 1657271177.94177
 asMultiple: FALSE
 asStatic: FALSE
