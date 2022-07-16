@@ -52,11 +52,17 @@ assesment_app_server <- function(id, DATAOBJS, REPORTINGVARS){
       
       observe({
         if(!is.null(DATAOBJS$summary_data) & is.data.frame(DATAOBJS$summary_data)){
-          updateSelectInput(session = session, "yearVar", choices = colnames(DATAOBJS$summary_data))
+          updateSelectInput(session = session, "yearVar", choices = colnames(select_if(DATAOBJS$summary_data, is.numeric)))
           updateSelectInput(session = session, "ambientVar", choices = colnames(select_if(DATAOBJS$summary_data, is.numeric)))
           updateSelectInput(session = session, "resourcesVar", choices = colnames(select_if(DATAOBJS$summary_data, is.numeric)))
           updateSelectInput(session = session, "ecosystemValVar", choices = colnames(select_if(DATAOBJS$summary_data, is.numeric)))
           updateSelectInput(session = session, "ecosystemThreatVar", choices = colnames(select_if(DATAOBJS$summary_data, is.numeric)))
+          if(input$yearVar != ""){
+            updateSliderInput(session = session, 
+                              "yearRange", 
+                              min = DATAOBJS$summary_data$Year %>% min(),
+                              max = DATAOBJS$summary_data$Year %>% max())
+          }
         }
       })
       
