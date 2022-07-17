@@ -17,7 +17,7 @@ generate_report_table_row <- function(data_df, row_input_data, year_col, summary
   data_vec <- data_df[[row_input_data$indicator]]
   mean_data <- mean(data_vec, na.rm = T)
   sd_data <- sd(data_vec, na.rm = T)
-  percentiles = quantile(data_vec, probs = c(0.1, 0.25, 0.5, 0.75, 0.9)) %>% paste0(collapse = ", ")
+  percentiles = quantile(data_vec, probs = c(0.1, 0.25, 0.5, 0.75, 0.9), na.rm = T) %>% paste0(collapse = ", ")
   current_year <- max(data_df[[year_col]])
   summarised_df <- plyr::ddply(data_df, year_col, function(df){
     year_data_vec <- df[[row_input_data$indicator]]
