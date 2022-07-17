@@ -60,8 +60,8 @@ assesment_app_server <- function(id, DATAOBJS, REPORTINGVARS){
           if(input$yearVar != ""){
             updateSliderInput(session = session, 
                               "yearRange", 
-                              min = DATAOBJS$summary_data$Year %>% min(),
-                              max = DATAOBJS$summary_data$Year %>% max())
+                              min = DATAOBJS$summary_data[[input$yearVar]] %>% min(na.rm = T),
+                              max = DATAOBJS$summary_data[[input$yearVar]] %>% max(na.rm = T))
           }
         }
       })
