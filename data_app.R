@@ -42,7 +42,7 @@ get_db_data_list <- function(db_con, input){
   ## merge Hybas and wetland data ####
   
   colnames(hybas_db_df) <- c("ramsarid","Ramsar.Name","Year","Annual.Precipitation.Hybas5","Palmer.Drought.Hybas5","Runoff.Hybas5")
-  list(WDPA.Ramsar.DBDat.Filter.Summary, hybas_db_df) %>% return()
+  list(wdpa = WDPA.Ramsar.DBDat.Filter.Summary, hybas = hybas_db_df) %>% return()
 }
 
 
@@ -59,8 +59,11 @@ data_server <- function(id, DATAOBJS, db_con){
         if(is.null(inFile))
           return(NULL)
         
+        if(DATAOBJS$raw_data_path == inFile$datapath)
+          return(NULL)
         
         DATAOBJS$summary_data <<- read.csv(input$summaryFile$datapath) 
+        DATAOBJS$raw_data_path <<- inFile$datapath
         DATAOBJS$raw_summary_data <<- DATAOBJS$summary_data
         output$dataDF <- DT::renderDataTable(DT::datatable(DATAOBJS$summary_data, 
                                                            options = list(paging = FALSE,
@@ -81,7 +84,7 @@ data_server <- function(id, DATAOBJS, db_con){
           df_list <- get_db_data_list(db_con, input)
           ## merge Hybas and wetland data ####
           
-          df_list <- list(DATAOBJS$raw_summary_data %>% mutate(ramsarid=as.numeric(input$ramasarId), Year=WaterYear)) %>% rlist::list.merge(df_list)      
+          df_list <- list(summary_data = DATAOBJS$raw_summary_data %>% mutate(ramsarid=as.numeric(input$ramasarId), Year=WaterYear)) %>% rlist::list.merge(df_list)      
           merged_df <- df_list %>% purrr::reduce(inner_join,  by=c("ramsarid", "Year"))
           DATAOBJS$summary_data <<- merged_df
           output$dataDF <- DT::renderDataTable(DT::datatable(merged_df, 
